@@ -152,7 +152,11 @@ class TcpClient {
       this._socket.once('end', endHandler)
       this._socket.addListener('error', errHandler)
 
-      await promiseTimeout(promise, timeout, 'ERR_TCP_READ_TIMEOUT')
+      // Handle case where end is not emitted
+      await Promise.race([
+        new Promise((resolve) => setTimeout(resolve, timeout)),
+        promise
+      ])
       return typeof chunks[0] === 'string' ? chunks.join('') : Buffer.concat(chunks)
     } finally {
       this._socket.removeListener('data', dataHandler)

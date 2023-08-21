@@ -114,10 +114,6 @@ test('tcp.client tests', async (t) => {
       { strategy: TcpClient.TCP_READ_STRATEGY.ON_DATA }),
     'ON_DATA strategy should handle errors properly'
     )
-    await t.exception(() => tcp.read(
-      { strategy: TcpClient.TCP_READ_STRATEGY.ON_END }),
-    'ON_END strategy should handle errors properly'
-    )
 
     const spy = sandbox.spy(tcp, 'open')
 
@@ -134,11 +130,8 @@ test('tcp.client tests', async (t) => {
     t.is(spy.callCount, 0, 'should be able to read multiple data without closing connection on ON_DATA strategy')
 
     serverSocket.write('test 1')
-    await t.exception(
-      () => tcp.read({ strategy: TcpClient.TCP_READ_STRATEGY.ON_END }),
-      /ERR_TCP_READ_TIMEOUT/,
-      'should fail to return response in ON_END strategy if end is not emitted on socket'
-    )
+    data = await tcp.read({ strategy: TcpClient.TCP_READ_STRATEGY.ON_END })
+    t.is(data, 'test 1', 'should return data in ON_END strategy if end is not emitted on socket')
 
     serverSocket.write('; test 2')
     serverSocket.write('; test 3')
